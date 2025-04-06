@@ -1,0 +1,15 @@
+{
+  "name": "sharepass-backend-node",
+  "version": "1.0.0",
+  "description": "sharepass is a platform where user can create a password and then manage it. he can also add/remove other users in order to share the passwords with them.",
+  "license": "ISC",
+  "author": "NikhilHaspe",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
