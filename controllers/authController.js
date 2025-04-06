@@ -1,6 +1,55 @@
+const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
+const AppError = require("../utils/apiError");
+
+// JWT
+const signToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN,
+  });
+};
+
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+  };
+  if (process.env.NODE_ENV === "production") cookieOptions.secure = true;
+
+  res.cookie("jwt", token, cookieOptions);
+
+  user.password = undefined;
+  res.status(statusCode).json({
+    status: "success",
+    token,
+    data: { user },
+  });
+};
 
 // new user sign up
+exports.protect = async (req, res, next) => {
+  let token;
+
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization;
+  } else if (req.cookies.jwt) {
+    token = req.cookies.jwt;
+  }
+
+  if (!token) {
+    return next(
+      new AppError(401, "You are not logged in, please login to get access!")
+    );
+  }
+
+  // TO BE CONTINUE...
+};
+
 exports.signUp = async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
@@ -9,8 +58,7 @@ exports.signUp = async (req, res, next) => {
     passwordConfirm: req.body.passwordConfirm,
   });
 
-  newUser.password = undefined;
-  res.status(201).json({ status: "success", data: { user: newUser } });
+  return createSendToken(newUser, 201, res);
 };
 
 // user login
@@ -18,25 +66,13 @@ exports.login = async (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    res
-      .status(400)
-      .json({ status: "fail", message: "Invalid email or password!" });
-    return;
+    return next(new AppError(400, "Invalid email or password!"));
   }
 
   const user = await User.findOne({ email }).select("+password");
   if (!user || !(await user.isPasswordCorrect(password, user.password))) {
-    res
-      .status(401)
-      .json({ status: "fail", message: "Invalid email or password!" });
-    return;
+    return next(new AppError(401, "Invalid email or password!"));
   }
 
-  // user.password = undefined;
-  res.status(200).json({
-    status: "success",
-    data: {
-      user,
-    },
-  });
+  return createSendToken(user, 201, res);
 };
