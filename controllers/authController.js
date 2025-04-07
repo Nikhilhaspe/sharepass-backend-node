@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
 const AppError = require("../utils/apiError");
 const { promisify } = require("util");
+const crypto = require("crypto");
 
 // JWT
 const signToken = (id) => {
@@ -118,5 +119,60 @@ exports.updatePassowrd = async (req, res, next) => {
   await user.save();
 
   // new JWT token
+  createSendToken(user, 200, res);
+};
+
+// Docs: when user forgots his/her password they will get a mail with link to reset password
+// below two controllers are for the same
+// forgot password
+exports.forgotPassword = async (req, res, next) => {
+  const user = await User.findOne({ email: req.body.email });
+
+  if (!user) {
+    return next(
+      new AppError(404, `There is no user with email address ${req.body.email}`)
+    );
+  }
+
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+
+  try {
+    const resetUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/api/v1/users/resetPassword/${resetToken}`;
+
+    res
+      .status(200)
+      .json({ status: "success", data: { resetPasswordUrl: resetUrl } });
+  } catch (error) {
+    return next(new AppError(500, error.message));
+  }
+
+  // TODO: EMAIL INTEGRATION
+};
+
+// reset password
+exports.resetPassword = async (req, res, next) => {
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new AppError(400, "Token is invalid or has expired"));
+  }
+
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+
   createSendToken(user, 200, res);
 };
