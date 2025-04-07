@@ -1,5 +1,6 @@
 const express = require("express");
 const morgan = require("morgan");
+const cookieParser = require("cookie-parser");
 
 // routes
 const userRoutes = require("./routes/userRoutes");
@@ -17,6 +18,8 @@ if (process.env.NODE_ENV === "development") {
 }
 // 2. JSON body parser
 app.use(express.json());
+// 3. Cookie Parser
+app.use(cookieParser());
 
 // routes
 // 1. users
