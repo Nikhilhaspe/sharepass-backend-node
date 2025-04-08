@@ -1,6 +1,7 @@
 const express = require("express");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
+const path = require("path");
 
 // routes
 const userRoutes = require("./routes/userRoutes");
@@ -20,6 +21,8 @@ if (process.env.NODE_ENV === "development") {
 app.use(express.json());
 // 3. Cookie Parser
 app.use(cookieParser());
+// 4. server static files
+app.use(express.static(path.join(__dirname, "public")));
 
 // routes
 // 1. users
