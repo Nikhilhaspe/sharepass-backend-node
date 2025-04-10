@@ -47,6 +47,13 @@ const userSchema = mongoose.Schema({
 });
 
 // pre middlewares
+// search in only active user for every query that starts with find
+userSchema.pre(/^find/, function (next) {
+  // this => current query
+  this.find({ active: { $ne: false } });
+  next();
+});
+
 userSchema.pre("save", async function (next) {
   // will be hit for the new user signup as well
   if (!this.isModified("password")) return next();

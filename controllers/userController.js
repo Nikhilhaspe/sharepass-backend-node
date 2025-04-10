@@ -2,6 +2,7 @@ const User = require("../models/userModel");
 const AppError = require("../utils/apiError");
 const multer = require("multer");
 const sharp = require("sharp");
+const catchAsync = require("../utils/catchAsync");
 
 // multer for image uploads
 const multerStorage = multer.memoryStorage();
@@ -22,24 +23,6 @@ const upload = multer({
   fileFilter: multerFilter,
 });
 
-// image upload - uploadsfile in the memory and puts file obj in req
-exports.uploadUserPhoto = upload.single("photo");
-
-// user photo resize
-exports.resizeUserPhoto = async (req, res, next) => {
-  if (!req.file) return next();
-
-  req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
-
-  await sharp(req.file.buffer)
-    .resize(500, 500)
-    .toFormat("jpeg")
-    .jpeg({ quality: 90 })
-    .toFile(`public/img/users/${req.file.filename}`);
-
-  next();
-};
-
 // utils
 function filterObj(obj, ...allowedProps) {
   const newObj = {};
@@ -51,16 +34,48 @@ function filterObj(obj, ...allowedProps) {
 }
 
 // delete user (does not delete the used just de-activates him/her)
-exports.deleteMe = async (req, res, next) => {
+exports.deleteMe = catchAsync(async (req, res, next) => {
   await User.findByIdAndUpdate(req.user.id, { active: false });
 
   res.status(204).json({ status: "success", data: null });
-};
+});
 
 // get user
+exports.getMe = catchAsync(async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+
+  if (!user) {
+    return next(new AppError(404, "User does not exists!"));
+  }
+
+  res.status(200).json({
+    status: " success",
+    data: {
+      user,
+    },
+  });
+});
+
+// image upload - uploadsfile in the memory and puts file obj in req
+exports.uploadUserPhoto = upload.single("photo");
+
+// user photo resize
+exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
+  if (!req.file) return next();
+
+  req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+
+  await sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat("jpeg")
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/users/${req.file.filename}`);
+
+  next();
+});
 
 // update user (data + profile photo file update if present)
-exports.updateMe = async function (req, res, next) {
+exports.updateMe = catchAsync(async function (req, res, next) {
   if (req.body.password || req.body.passwordConfirm) {
     return next(
       new AppError(
@@ -79,4 +94,4 @@ exports.updateMe = async function (req, res, next) {
   });
 
   res.status(200).json({ status: "success", data: { user: updatedUser } });
-};
+});

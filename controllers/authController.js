@@ -3,6 +3,7 @@ const User = require("../models/userModel");
 const AppError = require("../utils/apiError");
 const { promisify } = require("util");
 const crypto = require("crypto");
+const catchAsync = require("../utils/catchAsync");
 
 // JWT
 const signToken = (id) => {
@@ -31,7 +32,7 @@ const createSendToken = (user, statusCode, res) => {
 };
 
 // new user sign up
-exports.protect = async (req, res, next) => {
+exports.protect = catchAsync(async (req, res, next) => {
   let token;
 
   // 1. Check token present or not
@@ -71,10 +72,10 @@ exports.protect = async (req, res, next) => {
   // 5. success
   req.user = currentUser;
   next();
-};
+});
 
 // signup
-exports.signUp = async (req, res, next) => {
+exports.signUp = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
     email: req.body.email,
@@ -83,10 +84,10 @@ exports.signUp = async (req, res, next) => {
   });
 
   return createSendToken(newUser, 201, res);
-};
+});
 
 // login
-exports.login = async (req, res, next) => {
+exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -99,10 +100,10 @@ exports.login = async (req, res, next) => {
   }
 
   return createSendToken(user, 201, res);
-};
+});
 
 // password update
-exports.updatePassowrd = async (req, res, next) => {
+exports.updatePassowrd = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.user.id).select("+password");
 
   // check current password
@@ -120,12 +121,12 @@ exports.updatePassowrd = async (req, res, next) => {
 
   // new JWT token
   createSendToken(user, 200, res);
-};
+});
 
 // Docs: when user forgots his/her password they will get a mail with link to reset password
 // below two controllers are for the same
 // forgot password
-exports.forgotPassword = async (req, res, next) => {
+exports.forgotPassword = catchAsync(async (req, res, next) => {
   const user = await User.findOne({ email: req.body.email });
 
   if (!user) {
@@ -150,10 +151,10 @@ exports.forgotPassword = async (req, res, next) => {
   }
 
   // TODO: EMAIL INTEGRATION
-};
+});
 
 // reset password
-exports.resetPassword = async (req, res, next) => {
+exports.resetPassword = catchAsync(async (req, res, next) => {
   const hashedToken = crypto
     .createHash("sha256")
     .update(req.params.token)
@@ -175,4 +176,4 @@ exports.resetPassword = async (req, res, next) => {
   await user.save();
 
   createSendToken(user, 200, res);
-};
+});

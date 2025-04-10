@@ -11,6 +11,7 @@ router.post("/resetPassword/:token", authController.resetPassword);
 
 // protect all below routes
 router.use(authController.protect);
+router.get("/getMe", userController.getMe);
 router.post("/updatePassword", authController.updatePassowrd);
 router.delete("/deleteMe", userController.deleteMe);
 router.patch(
