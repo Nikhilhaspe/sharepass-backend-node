@@ -9,6 +9,9 @@ const router = express.Router();
 router.use(authController.protect);
 
 router.post("/", credentialController.createCredential);
+
+router.get("/myCredentials", credentialController.getMyCredentials);
+
 router
   .route("/:id")
   .get(credentialController.getCredential)

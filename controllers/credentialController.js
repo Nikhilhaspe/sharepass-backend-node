@@ -34,6 +34,9 @@ exports.updateCredential = catchAsync(async (req, res, next) => {
     }
   );
 
+  if (!updatedCredential)
+    return next(new AppError(404, "No credential found!"));
+
   res.status(200).json({ status: "success", data: { updatedCredential } });
 });
 
@@ -43,4 +46,19 @@ exports.deleteCredential = catchAsync(async (req, res, next) => {
   if (!credential) return next(new AppError(404, "No credential found!"));
 
   res.status(204).json({ status: "success", data: null });
+});
+
+exports.getMyCredentials = catchAsync(async (req, res, next) => {
+  const credentials = await Credential.find({ owner: req.user.id });
+
+  if (credentials.length === 0)
+    return next(new AppError(404, "No credentials found!"));
+
+  res.status(200).json({
+    status: "success",
+    length: credentials.length,
+    data: {
+      credentials,
+    },
+  });
 });
