@@ -85,6 +85,10 @@ exports.updateMe = catchAsync(async function (req, res, next) {
     );
   }
 
+  if (req.body.username) {
+    return next(new AppError(400, "You cannot change your username!"));
+  }
+
   const filteredBody = filterObj(req.body, "name", "email");
   if (req.file) filteredBody.photo = req.file.filename;
 
