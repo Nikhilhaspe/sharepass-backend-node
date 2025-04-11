@@ -4,9 +4,24 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 
 const userSchema = mongoose.Schema({
+  username: {
+    type: String,
+    required: [true, "Please tell us your username!"],
+    unique: true,
+    validate: {
+      // only works for create & save
+      validator: function (el) {
+        return !el.includes(" ") && validator.isAlphanumeric(el);
+      },
+      message:
+        "Username cannot contain any white spaces and only alphanumeric characters are allowed!",
+    },
+    maxlength: 30,
+    minlength: 3,
+  },
   name: {
     type: String,
-    required: [true, "Pleas tell us your name!"],
+    required: [true, "Please tell us your name!"],
   },
   email: {
     type: String,
