@@ -5,6 +5,7 @@ const path = require("path");
 
 // routes
 const userRoutes = require("./routes/userRoutes");
+const credentialRoutes = require("./routes/credentialRoutes");
 
 // global error controller
 const globalErrorController = require("./controllers/globalErrorController");
@@ -19,14 +20,18 @@ if (process.env.NODE_ENV === "development") {
 }
 // 2. JSON body parser
 app.use(express.json());
-// 3. Cookie Parser
+// 3. URL encoded body parser
+// app.use(express.urlencoded({ extended: true }));
+// 4. Cookie Parser
 app.use(cookieParser());
-// 4. server static files
+// 5. server static files
 app.use(express.static(path.join(__dirname, "public")));
 
 // routes
 // 1. users
 app.use("/api/v1/users", userRoutes);
+// 2. credentials
+app.use("/api/v1/credentials", credentialRoutes);
 
 // Handle All Unmatched Routes
 app.use((req, res, next) => {
