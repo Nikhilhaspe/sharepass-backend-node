@@ -6,6 +6,7 @@ const path = require("path");
 // routes
 const userRoutes = require("./routes/userRoutes");
 const credentialRoutes = require("./routes/credentialRoutes");
+const sharingRoutes = require("./routes/sharingRoutes");
 
 // global error controller
 const globalErrorController = require("./controllers/globalErrorController");
@@ -32,6 +33,8 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/api/v1/users", userRoutes);
 // 2. credentials
 app.use("/api/v1/credentials", credentialRoutes);
+// 3. share
+app.use("/api/v1/shares", sharingRoutes);
 
 // Handle All Unmatched Routes
 app.use((req, res, next) => {

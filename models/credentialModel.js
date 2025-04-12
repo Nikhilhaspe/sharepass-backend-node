@@ -46,14 +46,15 @@ const credentialSchema = mongoose.Schema(
 );
 
 // pre middlewares
-credentialSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+// TODO: Encrypt the password using some two way library
+// credentialSchema.pre("save", async function (next) {
+//   if (!this.isModified("password")) return next();
 
-  this.passwordConfirm = undefined;
-  this.password = await bcrypt.hash(this.password, 12);
+//   this.passwordConfirm = undefined;
+//   this.password = await bcrypt.hash(this.password, 12);
 
-  next();
-});
+//   next();
+// });
 
 credentialSchema.pre(/^find/, function (next) {
   this.populate({
@@ -65,6 +66,10 @@ credentialSchema.pre(/^find/, function (next) {
 });
 
 // post middlewares
+// TODO: Descrypt the password using some two way library
+// credentialSchema.post("", function (next) {
+//   next();
+// });
 
 // static methods
 
