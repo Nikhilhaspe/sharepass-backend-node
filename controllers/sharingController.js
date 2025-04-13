@@ -2,7 +2,6 @@ const Share = require("../models/sharingModel");
 
 const AppError = require("../utils/apiError");
 const catchAsync = require("../utils/catchAsync");
-const handlerFactory = require("./handlerFactory");
 
 // add share in batches
 exports.createShare = catchAsync(async (req, res, next) => {

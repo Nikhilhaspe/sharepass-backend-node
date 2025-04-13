@@ -17,7 +17,10 @@ exports.createCredential = catchAsync(async (req, res, next) => {
 });
 
 exports.getCredential = catchAsync(async (req, res, next) => {
-  const credential = await Credential.findById(req.params.id);
+  const credential = await Credential.findOne({
+    _id: req.params.id,
+    owner: req.user.id,
+  });
 
   if (!credential) return next(new AppError(404, "No credential found!"));
 
@@ -25,8 +28,8 @@ exports.getCredential = catchAsync(async (req, res, next) => {
 });
 
 exports.updateCredential = catchAsync(async (req, res, next) => {
-  const updatedCredential = await Credential.findByIdAndUpdate(
-    req.params.id,
+  const updatedCredential = await Credential.findOneAndUpdate(
+    { _id: req.params.id, owner: req.user.id },
     req.body,
     {
       runValidators: true,
@@ -41,7 +44,10 @@ exports.updateCredential = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteCredential = catchAsync(async (req, res, next) => {
-  const credential = await Credential.findByIdAndDelete(req.params.id);
+  const credential = await Credential.deleteOne({
+    _id: req.params.id,
+    owner: req.user.id,
+  });
 
   if (!credential) return next(new AppError(404, "No credential found!"));
 
