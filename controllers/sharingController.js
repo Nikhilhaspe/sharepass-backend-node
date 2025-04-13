@@ -4,12 +4,28 @@ const AppError = require("../utils/apiError");
 const catchAsync = require("../utils/catchAsync");
 const handlerFactory = require("./handlerFactory");
 
-// add new share
-// TODO: Convert this to work with multiple shared withs
-exports.shareCredential = handlerFactory.createOne(Share);
+// add share in batches
+exports.createShare = catchAsync(async (req, res, next) => {
+  const shares = req.body.sharedWith.map((sharedWith) => {
+    return {
+      credentialId: req.body.credentialId,
+      sharedBy: req.user.id,
+      sharedWith,
+    };
+  });
+
+  const docs = await Share.create(shares);
+
+  if (docs.length !== req.body.sharedWith.length)
+    return next(new AppError(500, "Something went wrong, try again!"));
+
+  res
+    .status(201)
+    .json({ status: "success", records: docs.length, data: { shares: docs } });
+});
 
 // get particular share details
-exports.getSharedCredential = catchAsync(async (req, res, next) => {
+exports.getShare = catchAsync(async (req, res, next) => {
   const credential = await Share.findOne({
     sharedWith: req.user.id,
     _id: req.params.id,
@@ -26,7 +42,7 @@ exports.getSharedCredential = catchAsync(async (req, res, next) => {
 });
 
 // get all shares
-exports.getSharedCredentials = catchAsync(async (req, res, next) => {
+exports.getAllShares = catchAsync(async (req, res, next) => {
   const docs = await Share.find({ sharedWith: { $eq: req.user.id } });
 
   if (docs.length === 0) return next(new AppError(404, "No records found!"));
@@ -40,9 +56,21 @@ exports.getSharedCredentials = catchAsync(async (req, res, next) => {
   });
 });
 
-// TODO: Convert this to work with multiple shared withs
-exports.revokeCredential = catchAsync(async (req, res, next) => {
-  res
-    .status(500)
-    .json({ status: "success", message: "Route not defined yet!" });
+// revoke share in batches
+exports.revokeShare = catchAsync(async (req, res, next) => {
+  const result = await Share.deleteMany({
+    credentialId: req.body.credentialId,
+    sharedBy: req.user.id,
+    sharedWith: { $in: req.body.revokeFrom },
+  });
+
+  if (result.deletedCount !== req.body.revokeFrom.length)
+    return next(new AppError(500, "Something went wrong, try again!"));
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      data: result,
+    },
+  });
 });

@@ -7,12 +7,12 @@ const router = express.Router();
 
 router.use(authController.protect);
 
-router.post("/", sharingController.shareCredential);
+router.post("/", sharingController.createShare);
 
-router.get("/:id", sharingController.getSharedCredential);
+router.get("/:id", sharingController.getShare);
 
-router.get("/", sharingController.getSharedCredentials);
+router.get("/", sharingController.getAllShares);
 
-router.delete("/", sharingController.revokeCredential);
+router.delete("/", sharingController.revokeShare);
 
 module.exports = router;
